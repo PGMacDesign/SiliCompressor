@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.iceteck.silicompressorr.SiliCompressor;
+import com.iceteck.silicompressorr.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,8 +42,10 @@ public class SelectPictureActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE_VID = 2;
     private static final int REQUEST_TAKE_VIDEO = 200;
+    private static final int REQUEST_GALLERY_VIDEO_RETRIEVE = 202;
     private static final int TYPE_IMAGE = 1;
     private static final int TYPE_VIDEO = 2;
+    private static final int TYPE_VIDEO2 = 3;
 
     String mCurrentPhotoPath;
     Uri capturedUri = null;
@@ -50,6 +53,7 @@ public class SelectPictureActivity extends AppCompatActivity {
     ImageView imageView;
     TextView picDescription;
     private ImageView videoImageView;
+    private ImageView videoImageView2;
     LinearLayout compressionMsg;
 
     @Override
@@ -60,6 +64,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         imageView = (ImageView) findViewById(R.id.photo);
+	    videoImageView2 = (ImageView) findViewById(R.id.videoImageView2);
         videoImageView = (ImageView) findViewById(R.id.videoImageView);
         picDescription = (TextView) findViewById(R.id.pic_description);
         compressionMsg = (LinearLayout) findViewById(R.id.compressionMsg);
@@ -76,6 +81,13 @@ public class SelectPictureActivity extends AppCompatActivity {
             public void onClick(View view) {
                 requestPermissions(TYPE_VIDEO);
             }
+        });
+        
+        this.videoImageView2.setOnClickListener(new View.OnClickListener() {
+	        @Override
+	        public void onClick(View v) {
+				requestPermissions(TYPE_VIDEO2);
+	        }
         });
     }
 
@@ -102,6 +114,8 @@ public class SelectPictureActivity extends AppCompatActivity {
             } else if (mediaType == TYPE_VIDEO) {
                 // Want to compress a video
                 dispatchTakeVideoIntent();
+            } else if (mediaType == TYPE_VIDEO2){
+            	openVideoGalleryIntent();
             }
 
         }
@@ -217,7 +231,19 @@ public class SelectPictureActivity extends AppCompatActivity {
 
 
     }
-
+	
+	/**
+	 * Open the intent to grab a video from the gallery
+	 */
+	private void openVideoGalleryIntent(){
+		try {
+			Intent intent2 = new Intent(Intent.ACTION_PICK);
+			intent2.setType("video/*");
+			intent2.setAction(Intent.ACTION_GET_CONTENT);
+			startActivityForResult(Intent.createChooser(intent2, "Select Video"), REQUEST_GALLERY_VIDEO_RETRIEVE);
+		} catch (Exception e){e.printStackTrace();}
+    }
+    
     // Method which will process the captured image
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -232,14 +258,35 @@ public class SelectPictureActivity extends AppCompatActivity {
 
 
         } else if (requestCode == REQUEST_TAKE_VIDEO && resultCode == RESULT_OK) {
-            if (data.getData() != null) {
-                //create destination directory
-                File f = new File( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
-                if (f.mkdirs() || f.isDirectory())
-                    //compress and output new video specs
-                    new VideoCompressAsyncTask(this).execute(mCurrentPhotoPath, f.getPath());
-
-            }
+        	if(data != null) {
+		        if (data.getData() != null) {
+			        //create destination directory
+			        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
+			        if (f.mkdirs() || f.isDirectory())
+				        //compress and output new video specs
+				        new VideoCompressAsyncTask(this).execute(mCurrentPhotoPath, f.getPath());
+			
+		        }
+	        } else {
+        		if(capturedUri != null){
+			        //create destination directory
+			        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
+			        if (f.mkdirs() || f.isDirectory())
+				        //compress and output new video specs
+				        new VideoCompressAsyncTask(this).execute(mCurrentPhotoPath, f.getPath());
+		        }
+	        }
+        } else if (requestCode == REQUEST_GALLERY_VIDEO_RETRIEVE && resultCode == RESULT_OK){
+        	if(data != null){
+		        Uri videoUri = data.getData();
+		        try {
+			        String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
+			        String newPath = filePath.replace(".mp4", "_EDITED.mp4");
+			        new VideoCompressAsyncTask(this).execute(videoUri.toString(), newPath);
+		        } catch (Exception e){
+		        	e.printStackTrace();
+		        }
+	        }
         }
 
     }
@@ -310,7 +357,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         }
     }
 
-
+	
     class VideoCompressAsyncTask extends AsyncTask<String, String, String> {
 
         Context mContext;
@@ -332,7 +379,7 @@ public class SelectPictureActivity extends AppCompatActivity {
             String filePath = null;
             try {
 
-                filePath = SiliCompressor.with(mContext).compressVideo(paths[0], paths[1]);
+                filePath = SiliCompressor.with(mContext).compressVideo(mContext, paths[0], paths[1]);
 
             } catch (URISyntaxException e) {
                 e.printStackTrace();

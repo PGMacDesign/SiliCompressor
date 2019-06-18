@@ -7,19 +7,25 @@ package com.iceteck.silicompressorr.videocompression;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.util.Log;
+
+import com.iceteck.silicompressorr.Util;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
@@ -250,13 +256,43 @@ public void scheduleVideoConvert(String path, File dest) {
      * @param destDir the destination directory where compressed video is eventually saved
      * @return
      */
-    public boolean  convertVideo(final String sourcePath, File destDir)
-    {
+    public boolean  convertVideo(final String sourcePath, File destDir) {
         return convertVideo( sourcePath, destDir, 0, 0, 0 );
     }
-
+    
     /**
      * Perform the actual video compression. Processes the frames and does the magic
+     * Width, height and bitrate are now default
+     * @param context Context can be passed if you want this code to attempt to obtain the absolute
+     *                path Uri to use. May send null, but if done so, will not make attempts to
+     *                get the absolute path uri.
+     * @param sourcePath the source uri for the file as per
+     * @param destDir the destination directory where compressed video is eventually saved
+     * @return
+     */
+    public boolean  convertVideo(@Nullable Context context, final String sourcePath, File destDir) {
+        return convertVideo(context, sourcePath, destDir, 0, 0, 0 );
+    }
+	
+	/**
+	 * Perform the actual video compression. Processes the frames and does the magic
+	 * @param sourcePath the source uri for the file as per
+	 * @param destDir the destination directory where compressed video is eventually saved
+	 * @param outWidth the target width of the converted video, 0 is default
+	 * @param outHeight the target height of the converted video, 0 is default
+	 * @param outBitrate the target bitrate of the converted video, 0 is default
+	 * @return
+	 */
+	@TargetApi(16)
+	public boolean convertVideo(final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
+		return convertVideo(null, sourcePath, destDir, outWidth, outHeight, outBitrate);
+	}
+	
+    /**
+     * Perform the actual video compression. Processes the frames and does the magic
+     * @param context Context can be passed if you want this code to attempt to obtain the absolute
+     *                path Uri to use. May send null, but if done so, will not make attempts to
+     *                get the absolute path uri.
      * @param sourcePath the source uri for the file as per
      * @param destDir the destination directory where compressed video is eventually saved
      * @param outWidth the target width of the converted video, 0 is default
@@ -265,11 +301,47 @@ public void scheduleVideoConvert(String path, File dest) {
      * @return
      */
     @TargetApi(16)
-    public boolean  convertVideo(final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
-        this.path=sourcePath;
-
+    public boolean convertVideo(@Nullable Context context, final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
+        this.path = sourcePath;
+        
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(path);
+        boolean wasSuccessful = false;
+        try {
+	        retriever.setDataSource(this.path);
+	        wasSuccessful = true;
+        } catch (IllegalArgumentException ile){}
+        if(!wasSuccessful){
+        	if(context != null) {
+		        try {
+			        this.path = Util.getFilePath(context, Uri.parse(sourcePath));
+			        retriever.setDataSource(this.path);
+			        wasSuccessful = true;
+		        } catch (URISyntaxException | IllegalArgumentException ile) {
+		        }
+	        }
+        }
+	    if(!wasSuccessful){
+		    if(context != null) {
+			    try {
+				    this.path = Util.getFilePath(context, Uri.parse(sourcePath));
+				    this.path = "file://" + this.path;
+				    retriever.setDataSource(this.path);
+				    wasSuccessful = true;
+			    } catch (URISyntaxException | IllegalArgumentException ile) {
+			    }
+		    }
+	    }
+        if(!wasSuccessful){
+	        this.path = "file://" + sourcePath;
+	        retriever.setDataSource(this.path);
+	        //Last one intentionally left out of try catch to trigger exception if bad Uri
+        }
+	
+	
+
+	    
+	    
+	    
         String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
         String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
         String rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
@@ -287,9 +359,13 @@ public void scheduleVideoConvert(String path, File dest) {
         int bitrate = outBitrate > 0 ? outBitrate : DEFAULT_VIDEO_BITRATE;
         int rotateRender = 0;
 
-        File cacheFile = new File(destDir,
-                "VIDEO_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".mp4"
-        );
+//        File cacheFile = new File(destDir,
+//                "VIDEO_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".mp4"
+//        );
+        File cacheFile = new File(destDir.getAbsolutePath());
+        try {
+        	cacheFile.mkdir();
+        } catch (Exception e){}
 
         if (Build.VERSION.SDK_INT < 18 && resultHeight > resultWidth && resultWidth != originalWidth && resultHeight != originalHeight) {
             int temp = resultHeight;

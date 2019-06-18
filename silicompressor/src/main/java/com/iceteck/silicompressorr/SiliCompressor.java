@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 
@@ -167,6 +168,25 @@ public class SiliCompressor {
     public String compressVideo(String videoFilePath, String destinationDir) throws URISyntaxException {
         return compressVideo(videoFilePath, destinationDir, 0, 0, 0);
     }
+    
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * This uses default values for the converted videos
+     *
+     * @param context Context can be passed if you want this code to attempt to obtain the absolute
+     *                path Uri to use. May send null, but if done so, will not make attempts to
+     *                get the absolute path uri.
+     * @param videoFilePath  source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(@Nullable Context context,
+                                String videoFilePath,
+                                String destinationDir) throws URISyntaxException {
+        return compressVideo(context, videoFilePath, destinationDir, 0, 0, 0);
+    }
 
 
     /**
@@ -181,8 +201,42 @@ public class SiliCompressor {
      * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFilePath, String destinationDir, int outWidth, int outHeight, int bitrate) throws URISyntaxException {
-        boolean isconverted = MediaController.getInstance().convertVideo(videoFilePath, new File(destinationDir), outWidth, outHeight, bitrate);
+    public String compressVideo(String videoFilePath,
+                                String destinationDir,
+                                int outWidth,
+                                int outHeight,
+                                int bitrate) throws URISyntaxException {
+    	
+    	return this.compressVideo(null, videoFilePath, destinationDir, outWidth, outHeight, bitrate);
+
+    }
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     *
+     * @param context Context can be passed if you want this code to attempt to obtain the absolute
+     *                path Uri to use. May send null, but if done so, will not make attempts to
+     *                get the absolute path uri.
+     * @param videoFilePath  source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @param outWidth       the target width of the compressed video or 0 to use default width
+     * @param outHeight      the target height of the compressed video or 0 to use default height
+     * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(@Nullable Context context,
+                                String videoFilePath,
+                                String destinationDir,
+                                int outWidth,
+                                int outHeight,
+                                int bitrate) throws URISyntaxException {
+    	
+    	//String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
+	    
+	    
+        boolean isconverted = MediaController.getInstance().convertVideo(context, videoFilePath,
+		        new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted) {
             Log.v(LOG_TAG, "Video Conversion Complete");
         } else {

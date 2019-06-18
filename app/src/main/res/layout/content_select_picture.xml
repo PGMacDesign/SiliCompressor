@@ -32,6 +32,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_videocam_grey_700_48dp"/>
+
+        <ImageView
+            android:id="@+id/videoImageView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_launcher"/>
     </LinearLayout>
 
 
