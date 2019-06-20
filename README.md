@@ -1,3 +1,7 @@
+
+ [![JitPack](https://jitpack.io/v/pgmacdesign/silicompressor.svg)](https://jitpack.io/#pgmacdesign/silicompressor)
+
+
 # SiliCompressor
 A powerful, flexible and easy to use Video and Image compression library for Android.
 
@@ -191,20 +195,25 @@ Bitmap imageBitmap = SiliCompressor.with(Context).getCompressBitmap(imagePath, t
 Download
 --------
 #### Gradle
+
+Include this in your Project-level build.gradle file:
 ```groovy
-implementation 'com.iceteck.silicompressorr:silicompressor:2.2.2'
+allprojects {
+    repositories {
+        .
+        .
+        .
+        maven { url 'https://jitpack.io' }
+    }
+}
 ```
 
-##### Maven
-```xml
-<dependency>
-  <groupId>com.iceteck.silicompressorr</groupId>
-  <artifactId>silicompressor</artifactId>
-  <version>2.2.2</version>
-  <type>aar</type>
-</dependency>
+Include this in your Module-level build.gradle file:
+
+```groovy
+implementation 'com.github.pgmacdesign:silicompressor:3.0.0'
 ```
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+
 
 License
 --------
