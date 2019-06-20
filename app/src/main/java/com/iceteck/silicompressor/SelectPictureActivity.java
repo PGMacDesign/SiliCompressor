@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.iceteck.silicompressorr.SiliCompressor;
 import com.iceteck.silicompressorr.Util;
+import com.iceteck.silicompressorr.VideoConversionProgressListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -281,8 +282,10 @@ public class SelectPictureActivity extends AppCompatActivity {
 		        Uri videoUri = data.getData();
 		        try {
 			        String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
-			        String newPath = filePath.replace(".mp4", "_EDITED.mp4");
-			        new VideoCompressAsyncTask(this).execute(videoUri.toString(), newPath);
+			        String newPath = filePath.replace(".mp4", "_90_PERCENT_EDITED.mp4");
+			        String newPath2 = filePath.replace(".mp4", "_50_PERCENT_EDITED.mp4");
+			        String newPath3 = filePath.replace(".mp4", "_10_PERCENT_EDITED.mp4");
+			        new VideoCompressAsyncTask(this).execute(videoUri.toString(), newPath, newPath2, newPath3);
 		        } catch (Exception e){
 		        	e.printStackTrace();
 		        }
@@ -358,7 +361,7 @@ public class SelectPictureActivity extends AppCompatActivity {
     }
 
 	
-    class VideoCompressAsyncTask extends AsyncTask<String, String, String> {
+    class VideoCompressAsyncTask extends AsyncTask<String, Float, String> {
 
         Context mContext;
 
@@ -373,18 +376,40 @@ public class SelectPictureActivity extends AppCompatActivity {
             compressionMsg.setVisibility(View.VISIBLE);
             picDescription.setVisibility(View.GONE);
         }
-
-        @Override
+	
+	    @Override
+	    protected void onProgressUpdate(Float... values) {
+        	if(values == null){
+        		return;
+	        }
+        	if(values.length <= 0){
+        		return;
+	        }
+        	if(true) { //Flip to false to stop printing here
+		        Log.d("SelectPictureActivity", "Progress Complete: " + ((values[0]) * 100) + "%");
+	        }
+		    super.onProgressUpdate(values);
+	    }
+	
+	    @Override
         protected String doInBackground(String... paths) {
             String filePath = null;
             try {
-
-                filePath = SiliCompressor.with(mContext).compressVideo(mContext, paths[0], paths[1]);
-
-            } catch (URISyntaxException e) {
+            	//Old Method
+//                filePath = SiliCompressor.with(mContext).compressVideo(mContext, paths[0], paths[1]);
+	            
+	            //New Method
+                filePath = SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressListener() {
+	                @Override
+	                public void videoConversionProgressed(float progressPercentage) {
+						publishProgress(progressPercentage);
+	                }
+                }, paths[0], paths[1], 0.5F);
+	            
+            } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();
             }
-            return filePath;
+            return (filePath == null) ? "" : filePath;
 
         }
 

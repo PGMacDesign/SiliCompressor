@@ -11,6 +11,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.FloatRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
@@ -37,27 +38,58 @@ public class SiliCompressor {
     private static final String LOG_TAG = SiliCompressor.class.getSimpleName();
     public static String videoCompressionPath;
 
+    static boolean shouldDebugLog;
+    
     static volatile SiliCompressor singleton = null;
-    private static Context mContext;
+    private Context mContext;
     private static final String FILE_PROVIDER_AUTHORITY = ".iceteck.silicompressor.provider";
 
     public SiliCompressor(Context context) {
         mContext = context;
     }
 
-    // initialise the class and set the context
+    // region initialize the class and set the context
     public static SiliCompressor with(Context context) {
         if (singleton == null) {
             synchronized (SiliCompressor.class) {
                 if (singleton == null) {
                     singleton = new Builder(context).build();
+	                SiliCompressor.shouldDebugLog = false;
                 }
             }
         }
         return singleton;
 
     }
-
+	
+	/**
+	 * Overloaded to allow for debug logging boolean. Defaults to false
+	 * @param context Context
+	 * @param shouldDebugLog boolean, if true, will debug log in the logcat, if false, will not.
+	 * @return {@link this}
+	 */
+	public static SiliCompressor with(Context context, boolean shouldDebugLog) {
+		if (singleton == null) {
+			synchronized (SiliCompressor.class) {
+				if (singleton == null) {
+					singleton = new Builder(context).build();
+					SiliCompressor.shouldDebugLog = shouldDebugLog;
+				}
+			}
+		}
+		return singleton;
+		
+	}
+	
+    //endregion
+	
+	//region Clear Instance
+    public static void clearInstance() {
+        singleton = null;
+    }
+    
+    //endregion
+	
     /**
      * Compress the image at with the specified path and return the filepath of the compressed image.
      *
@@ -83,7 +115,9 @@ public class SiliCompressor {
 
         if (deleteSourceImage) {
             boolean isdeleted = deleteImageFile(imagePath);
-            Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
+	        }
 
         }
 
@@ -93,7 +127,6 @@ public class SiliCompressor {
     static String getAuthorities(@NonNull Context context) {
         return context.getPackageName() + FILE_PROVIDER_AUTHORITY;
     }
-
 
     /**
      * Compress the image at with the specified path and return the bitmap data of the compressed image.
@@ -125,7 +158,9 @@ public class SiliCompressor {
 
         if (deleteSourceImage) {
             boolean isdeleted = deleteImageFile(imagePath);
-            Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.d(LOG_TAG, (isdeleted) ? "Source image file deleted" : "Error: Source image file not deleted.");
+	        }
 
         }
 
@@ -155,6 +190,61 @@ public class SiliCompressor {
         return deleted;
     }
 
+    //region Old Compress Video Public Calls
+	
+	/**
+	 * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+	 * resources because this method does not account for missing directories hence your converted file
+	 * could be in an unknown location
+	 * This uses default values for the converted videos
+	 *
+	 * @param videoFilePath  source path for the video file
+	 * @param destinationDir destination directory where converted file should be saved
+	 * @return The Path of the compressed video file
+	 */
+	public String compressVideoOld(String videoFilePath, String destinationDir) throws URISyntaxException {
+		return compressVideoOld(videoFilePath, destinationDir, 0, 0, 0);
+	}
+	
+	
+	/**
+	 * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+	 * resources because this method does not account for missing directories hence your converted file
+	 * could be in an unknown location
+	 *
+	 * @param videoFilePath  source path for the video file
+	 * @param destinationDir destination directory where converted file should be saved
+	 * @param outWidth       the target width of the compressed video or 0 to use default width
+	 * @param outHeight      the target height of the compressed video or 0 to use default height
+	 * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
+	 * @return The Path of the compressed video file
+	 */
+	public String compressVideoOld(String videoFilePath, String destinationDir,
+	                            int outWidth, int outHeight, int bitrate) throws URISyntaxException {
+		
+		//String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
+		
+		
+		boolean isconverted = MediaController.getInstance().convertVideoOld(videoFilePath,
+				new File(destinationDir), outWidth, outHeight, bitrate);
+		if (isconverted) {
+			if(SiliCompressor.shouldDebugLog) {
+				Log.v(LOG_TAG, "Video Conversion Complete");
+			}
+		} else {
+			if(SiliCompressor.shouldDebugLog) {
+				Log.v(LOG_TAG, "Video conversion in progress");
+			}
+		}
+		
+		return MediaController.cachedFile.getPath();
+		
+	}
+	
+	//endregion
+	
+    //region New Compress Video Public Calls
+	
     /**
      * Perform background video compression. Make sure the videofileUri and destinationUri are valid
      * resources because this method does not account for missing directories hence your converted file
@@ -165,7 +255,7 @@ public class SiliCompressor {
      * @param destinationDir destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFilePath, String destinationDir) throws URISyntaxException {
+    public String compressVideo(String videoFilePath, String destinationDir) {
         return compressVideo(videoFilePath, destinationDir, 0, 0, 0);
     }
     
@@ -175,49 +265,194 @@ public class SiliCompressor {
      * could be in an unknown location
      * This uses default values for the converted videos
      *
-     * @param context Context can be passed if you want this code to attempt to obtain the absolute
-     *                path Uri to use. May send null, but if done so, will not make attempts to
-     *                get the absolute path uri.
      * @param videoFilePath  source path for the video file
      * @param destinationDir destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */
-    public String compressVideo(@Nullable Context context,
-                                String videoFilePath,
-                                String destinationDir) throws URISyntaxException {
-        return compressVideo(context, videoFilePath, destinationDir, 0, 0, 0);
+    public String compressVideo(@Nullable VideoConversionProgressListener listener,
+                                String videoFilePath, String destinationDir) {
+        return compressVideo(listener, videoFilePath, destinationDir, 0, 0, 0);
     }
-
-
+    
     /**
      * Perform background video compression. Make sure the videofileUri and destinationUri are valid
      * resources because this method does not account for missing directories hence your converted file
      * could be in an unknown location
+     * This uses default values for the converted videos
      *
      * @param videoFilePath  source path for the video file
      * @param destinationDir destination directory where converted file should be saved
-     * @param outWidth       the target width of the compressed video or 0 to use default width
-     * @param outHeight      the target height of the compressed video or 0 to use default height
-     * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
+     * @param reduceVideoQualityToPercent Float (0-1), this will reduce the video quality percent to
+     *                                    the amount passed. IE, if you pass 0.5, it will halve the
+     *                                    bitrate and reduce quality by around 50%. If you pass 0.9,
+     *                                    it will reduce the bitrate by 10% and reduce the quality
+     *                                    by roughly 10%. If you pass in 0.277 it will reduce the
+     *                                    bitrate to 27.7% of the original value and reduce the
+     *                                    quality to roughly the same 27.7%.
+     *                                    Note that this will maintain the same
+     *                                    height and width ratio of the original video
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFilePath,
-                                String destinationDir,
-                                int outWidth,
-                                int outHeight,
-                                int bitrate) throws URISyntaxException {
+    public String compressVideo(String videoFilePath, String destinationDir,
+                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent)  {
     	
-    	return this.compressVideo(null, videoFilePath, destinationDir, outWidth, outHeight, bitrate);
-
+	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
+			    new File(destinationDir), reduceVideoQualityToPercent);
+	    if (isconverted) {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video Conversion Complete");
+		    }
+	    } else {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video conversion in progress");
+		    }
+	    }
+	
+	    return MediaController.cachedFile.getPath();
     }
+    
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * This uses default values for the converted videos
+     *
+     * @param videoFilePath  source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @param reduceVideoQualityToPercent Float (0-1), this will reduce the video quality percent to
+     *                                    the amount passed. IE, if you pass 0.5, it will halve the
+     *                                    bitrate and reduce quality by around 50%. If you pass 0.9,
+     *                                    it will reduce the bitrate by 10% and reduce the quality
+     *                                    by roughly 10%. If you pass in 0.277 it will reduce the
+     *                                    bitrate to 27.7% of the original value and reduce the
+     *                                    quality to roughly the same 27.7%.
+     *                                    Note that this will maintain the same
+     *                                    height and width ratio of the original video
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(@Nullable VideoConversionProgressListener listener,
+                                String videoFilePath, String destinationDir,
+                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent)  {
+    	
+	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
+			    new File(destinationDir), reduceVideoQualityToPercent);
+	    if (isconverted) {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video Conversion Complete");
+		    }
+	    } else {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video conversion in progress");
+		    }
+	    }
+	
+	    return MediaController.cachedFile.getPath();
+    }
+    
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * This uses default values for the converted videos
+     *
+     *
+     * @param videoFilePath  source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @param reduceVideoQualityToPercent Float (0-1), this will reduce the video quality percent to
+     *                                    the amount passed. IE, if you pass 0.5, it will halve the
+     *                                    bitrate and reduce quality by around 50%. If you pass 0.9,
+     *                                    it will reduce the bitrate by 10% and reduce the quality
+     *                                    by roughly 10%. If you pass in 0.277 it will reduce the
+     *                                    bitrate to 27.7% of the original value and reduce the
+     *                                    quality to roughly the same 27.7%.
+     *                                    Note that this will maintain the same
+     *                                    height and width ratio of the original video
+     * @param reduceHeightWidthToPercent  Float (0-1), this will reduce the height / width of the video to
+     *                                    the amount passed. IE, if you pass 0.5 and the size of the
+     *                                    video is 1080x720, it will halve the sizing and reduce it
+     *                                    to 540x360 and reduce quality by around 50%. if you pass 0.9 and the size of the
+     *                                    video is 1080x720, it will reduce it
+     *                                    to 972x648 and reduce quality by around 10%. if you pass 0.277 and the size of the
+     *                                    video is 1080x720, it will reduce it
+     *                                    to 299x199 and reduce quality to roughly the same 27.7%.
+     *                                    Note that this will maintain the same
+     *                                    height and width ratio of the original video
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(String videoFilePath, String destinationDir,
+                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent,
+                                @FloatRange(from = 0.01, to = 0.99) float reduceHeightWidthToPercent) {
+    	
+	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
+			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);
+	    if (isconverted) {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video Conversion Complete");
+		    }
+	    } else {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video conversion in progress");
+		    }
+	    }
+	
+	    return MediaController.cachedFile.getPath();
+    }
+    
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     * This uses default values for the converted videos
+     *
+     *
+     * @param videoFilePath  source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @param reduceVideoQualityToPercent Float (0-1), this will reduce the video quality percent to
+     *                                    the amount passed. IE, if you pass 0.5, it will halve the
+     *                                    bitrate and reduce quality by around 50%. If you pass 0.9,
+     *                                    it will reduce the bitrate by 10% and reduce the quality
+     *                                    by roughly 10%. If you pass in 0.277 it will reduce the
+     *                                    bitrate to 27.7% of the original value and reduce the
+     *                                    quality to roughly the same 27.7%.
+     *                                    Note that this will maintain the same
+     *                                    height and width ratio of the original video
+     * @param reduceHeightWidthToPercent  Float (0-1), this will reduce the height / width of the video to
+     *                                    the amount passed. IE, if you pass 0.5 and the size of the
+     *                                    video is 1080x720, it will halve the sizing and reduce it
+     *                                    to 540x360 and reduce quality by around 50%. if you pass 0.9 and the size of the
+     *                                    video is 1080x720, it will reduce it
+     *                                    to 972x648 and reduce quality by around 10%. if you pass 0.277 and the size of the
+     *                                    video is 1080x720, it will reduce it
+     *                                    to 299x199 and reduce quality to roughly the same 27.7%.
+     *                                    Note that this will maintain the same
+     *                                    height and width ratio of the original video
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(@Nullable VideoConversionProgressListener listener,
+                                String videoFilePath, String destinationDir,
+                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent,
+                                @FloatRange(from = 0.01, to = 0.99) float reduceHeightWidthToPercent) {
+    	
+	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
+			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);
+	    if (isconverted) {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video Conversion Complete");
+		    }
+	    } else {
+		    if(SiliCompressor.shouldDebugLog) {
+			    Log.v(LOG_TAG, "Video conversion in progress");
+		    }
+	    }
+	
+	    return MediaController.cachedFile.getPath();
+    }
+    
     /**
      * Perform background video compression. Make sure the videofileUri and destinationUri are valid
      * resources because this method does not account for missing directories hence your converted file
      * could be in an unknown location
      *
-     * @param context Context can be passed if you want this code to attempt to obtain the absolute
-     *                path Uri to use. May send null, but if done so, will not make attempts to
-     *                get the absolute path uri.
      * @param videoFilePath  source path for the video file
      * @param destinationDir destination directory where converted file should be saved
      * @param outWidth       the target width of the compressed video or 0 to use default width
@@ -225,28 +460,64 @@ public class SiliCompressor {
      * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
      * @return The Path of the compressed video file
      */
-    public String compressVideo(@Nullable Context context,
-                                String videoFilePath,
-                                String destinationDir,
-                                int outWidth,
-                                int outHeight,
-                                int bitrate) throws URISyntaxException {
+    public String compressVideo(String videoFilePath, String destinationDir,
+                                int outWidth, int outHeight, int bitrate) {
     	
     	//String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
 	    
 	    
-        boolean isconverted = MediaController.getInstance().convertVideo(context, videoFilePath,
+        boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
 		        new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted) {
-            Log.v(LOG_TAG, "Video Conversion Complete");
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.v(LOG_TAG, "Video Conversion Complete");
+	        }
         } else {
-            Log.v(LOG_TAG, "Video conversion in progress");
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.v(LOG_TAG, "Video conversion in progress");
+	        }
         }
 
         return MediaController.cachedFile.getPath();
 
     }
+    
+    /**
+     * Perform background video compression. Make sure the videofileUri and destinationUri are valid
+     * resources because this method does not account for missing directories hence your converted file
+     * could be in an unknown location
+     *
+     * @param videoFilePath  source path for the video file
+     * @param destinationDir destination directory where converted file should be saved
+     * @param outWidth       the target width of the compressed video or 0 to use default width
+     * @param outHeight      the target height of the compressed video or 0 to use default height
+     * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
+     * @return The Path of the compressed video file
+     */
+    public String compressVideo(@Nullable VideoConversionProgressListener listener,
+                                String videoFilePath, String destinationDir,
+                                int outWidth, int outHeight, int bitrate) {
+    	
+    	//String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
+	    
+	    
+        boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
+		        new File(destinationDir), outWidth, outHeight, bitrate);
+        if (isconverted) {
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.v(LOG_TAG, "Video Conversion Complete");
+	        }
+        } else {
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.v(LOG_TAG, "Video conversion in progress");
+	        }
+        }
 
+        return MediaController.cachedFile.getPath();
+
+    }
+    
+    //endregion
 
     private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         final int height = options.outHeight;
@@ -302,7 +573,9 @@ public class SiliCompressor {
         } else {
             cursor.moveToFirst();
             int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-            Log.e(LOG_TAG, String.format("%d", index));
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.e(LOG_TAG, String.format("%d", index));
+	        }
 
             String str = cursor.getString(index);
             cursor.close();
@@ -402,17 +675,25 @@ public class SiliCompressor {
 
             int orientation = exif.getAttributeInt(
                     ExifInterface.TAG_ORIENTATION, 0);
-            Log.d("EXIF", "Exif: " + orientation);
+	        if(SiliCompressor.shouldDebugLog) {
+		        Log.d("EXIF", "Exif: " + orientation);
+	        }
             Matrix matrix = new Matrix();
             if (orientation == 6) {
                 matrix.postRotate(90);
-                Log.d("EXIF", "Exif: " + orientation);
+	            if(SiliCompressor.shouldDebugLog) {
+		            Log.d("EXIF", "Exif: " + orientation);
+	            }
             } else if (orientation == 3) {
                 matrix.postRotate(180);
-                Log.d("EXIF", "Exif: " + orientation);
+	            if(SiliCompressor.shouldDebugLog) {
+		            Log.d("EXIF", "Exif: " + orientation);
+	            }
             } else if (orientation == 8) {
                 matrix.postRotate(270);
-                Log.d("EXIF", "Exif: " + orientation);
+	            if(SiliCompressor.shouldDebugLog) {
+		            Log.d("EXIF", "Exif: " + orientation);
+	            }
             }
             scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
                     scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
