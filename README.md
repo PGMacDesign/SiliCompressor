@@ -208,7 +208,7 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 
 License
 --------
-Copyright 2016 [Teyou Toure Nathan][toure]
+Copyright 2019 PGMacDesign
 
 Licensed under the Apache License, Version 2.0 (the "License") and GNU General Public License v2.0;
 
@@ -224,7 +224,3 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 
-[snap]:  https://oss.sonatype.org/content/repositories/snapshots
-[toure]:  https://www.linkedin.com/in/toure-nathan/
-[Void Canvas]: http://voidcanvas.com/whatsapp-like-image-compression-in-android/
-[Jorge E. Hernandez (@lalongooo)]: https://github.com/lalongooo
