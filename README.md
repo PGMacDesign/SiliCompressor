@@ -94,11 +94,24 @@ These are the new methods; each with an overloaded option to pass in the listene
 I left the original methods intact that still utilize the previous / older approach, but my newer methods do not. 
 <b> Note! </b> Keep in mind that if you do not have permission to write in said location or are not using a [FileProvider](https://developer.android.com/reference/android/support/v4/content/FileProvider) to define a writing space, this will fail. [Here is a Tutorial](https://www.journaldev.com/23219/android-capture-image-camera-gallery-using-fileprovider) if you are not familiar with it.  
 
-5) Adjusted the Sample Activity, SelectPictureActivity, to add an option to select from Gallery. This will also allow larger files to be converted as opposed to limiting it to 10 second clips.  
+5) Fixed bugs relating to incorrectly flipping Height and Width on videos depending on phone maker (Known with Google Pixel Phones) 
 
-6) Added in a boolean flag to allow the option to turn off / on logging so that the dev can ignore it if they don't want to see it (or flip it to false on production)  
+6) Adjusted the Sample Activity, SelectPictureActivity, to add an option to select from Gallery. This will also allow larger files to be converted as opposed to limiting it to 10 second clips.  
+
+7) Added in a boolean flag to allow the option to turn off / on logging so that the dev can ignore it if they don't want to see it (or flip it to false on production)  
 
 
+#### Misc
+
+I timed a few of the conversions using a Galaxy S9 for reference. 
+
+1) Compressing a 3.70gb mp4 down to 1.85gb (50%) took 600000 milliseconds (600 seconds / 10 minutes). 
+This was also true when converting it down to 70mb (2% of total, but passing in 1%) so the total percent to compress to does not adjust the time taken for the compression to occur.   
+
+2) Compressing a 5.00mb mp4 down to 2.50mb (50%) took 2456 milliseconds (2.5 seconds). 
+This was also true when converting it down to 500kb (1% of total) so the total percent to compress to does not adjust the time taken for the compression to occur.  
+
+If you are running an older device with less processing power, it may take longer whereas a newer device may convert faster. This is merely here as an example for reference. 
 
 Description
 --------
@@ -112,6 +125,7 @@ Credit
 --------
 The image compressor part of this project is inspired from [Void Canvas] blog from which the core part of the compressor was done.
 For the Video Compression part of this project, credit goes to [Jorge E. Hernandez (@lalongooo)] whose codes was used for the core part of the video compressor module.
+The original fork of this library came from [Teyou Toure Nathan](https://github.com/Tourenathan-G5organisation) who wrote nearly all of the [Silicompressor code](https://github.com/Tourenathan-G5organisation/SiliCompressor). I added in a large number of bugfixes as well as updates / improvements, but his code is what most of this is made of. 
 
 Usage
 --------
@@ -120,14 +134,39 @@ To effectively use this library, you must make sure you have added the following
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 ```
+
+#### Compress a video file down using %s
+Compress a video file down to 1% of it's original bitrate to reduce the quality but maintain original height and width params
+```java
+SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressListener() {
+        @Override
+        public void videoConversionProgressed(float progressPercentage) {
+			//Log, handle, or use the progress percentage here. Will be between 0.0 and 1.0
+        }
+}, videoPath, destinationFile, 0.01F);
+```
+
+#### Compress a video file down using %s
+Compress a video file down to 1% of it's original bitrate and half of its original height * width ratio to reduce the quality + height and width params
+```java
+SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressListener() {
+        @Override
+        public void videoConversionProgressed(float progressPercentage) {
+			//Log, handle, or use the progress percentage here. Will be between 0.0 and 1.0
+        }
+}, videoPath, destinationFile, 0.01F, 0.5F);
+```
+
 #### Compress a video file and return the file path of the new video
 ```java
 String filePath = SiliCompressor.with(Context).compressVideo(videoPath, destinationDirectory);
 ```
+
 #### Compress an image and return the file path of the new image
 ```java
 String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory);
 ```
+
 #### Compress an image and return the file path of the new image while deleting the source image
 ```java
 String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory, true);

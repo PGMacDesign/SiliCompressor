@@ -1041,7 +1041,7 @@ public class MediaController {
 	 */
 	@TargetApi(16)
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
-	                            File destDir, @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent) {
+	                            File destDir, @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent) {
 		
 		
 		MediaMetadataRetriever retriever = this.buildMediaMetadataRetriever(context, sourcePath);
@@ -1106,8 +1106,8 @@ public class MediaController {
 	 */
 	@TargetApi(16)
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
-	                            File destDir, @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent,
-	                            @FloatRange(from = 0.01, to = 0.99) float reduceHeightWidthToPercent) {
+	                            File destDir, @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent,
+	                            @FloatRange(from = 0.009, to = 0.999) float reduceHeightWidthToPercent) {
 		
 		
 		MediaMetadataRetriever retriever = this.buildMediaMetadataRetriever(context, sourcePath);

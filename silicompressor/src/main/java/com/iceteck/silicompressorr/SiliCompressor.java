@@ -66,7 +66,7 @@ public class SiliCompressor {
 	 * Overloaded to allow for debug logging boolean. Defaults to false
 	 * @param context Context
 	 * @param shouldDebugLog boolean, if true, will debug log in the logcat, if false, will not.
-	 * @return {@link this}
+	 * @return
 	 */
 	public static SiliCompressor with(Context context, boolean shouldDebugLog) {
 		if (singleton == null) {
@@ -294,7 +294,7 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent)  {
+                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent)  {
     	
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent);
@@ -332,7 +332,7 @@ public class SiliCompressor {
      */
     public String compressVideo(@Nullable VideoConversionProgressListener listener,
                                 String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent)  {
+                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent)  {
     	
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent);
@@ -380,8 +380,8 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent,
-                                @FloatRange(from = 0.01, to = 0.99) float reduceHeightWidthToPercent) {
+                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent,
+                                @FloatRange(from = 0.009, to = 0.999) float reduceHeightWidthToPercent) {
     	
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);
@@ -430,8 +430,8 @@ public class SiliCompressor {
      */
     public String compressVideo(@Nullable VideoConversionProgressListener listener,
                                 String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.01, to = 0.99) float reduceVideoQualityToPercent,
-                                @FloatRange(from = 0.01, to = 0.99) float reduceHeightWidthToPercent) {
+                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent,
+                                @FloatRange(from = 0.009, to = 0.999) float reduceHeightWidthToPercent) {
     	
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);

@@ -404,7 +404,7 @@ public class SelectPictureActivity extends AppCompatActivity {
 	                public void videoConversionProgressed(float progressPercentage) {
 						publishProgress(progressPercentage);
 	                }
-                }, paths[0], paths[1], 0.5F);
+                }, paths[0], paths[1], 0.01F);
 	            
             } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();

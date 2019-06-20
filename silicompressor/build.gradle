@@ -1,9 +1,9 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.jfrog.bintray'
+//apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.dcendents.android-maven'
 
-group = 'com.iceteck.silicompressorr'
-version = '2.2.2'
+group = 'com.pgmacdesign.silicompressor'
+version = '3.0.0'
 
 android {
     compileSdkVersion 28
@@ -11,7 +11,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 28
         versionCode 7
-        versionName "2.2.2"
+        versionName "3.0.0"
     }
     buildTypes {
         release {
@@ -31,19 +31,21 @@ dependencies {
 }
 
 ext {
+
+	
     bintrayRepo = 'maven'
     bintrayName = 'silicompressor'
-
-    publishedGroupId = 'com.iceteck.silicompressorr'
-    libraryName = 'SiliCompressor'
-    artifact = 'silicompressor'
+	
+	publishedGroupId = 'com.pgmacdesign.silicompressor'
+	libraryName = 'silicompressor'
+	artifact = 'silicompressor'
 
     libraryDescription = 'This is a powerful image and video compression library for android.'
 
     siteUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor'
     gitUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor.git'
 
-    libraryVersion = '2.2.2'
+    libraryVersion = '3.0.0'
 
     developerId = 'tourenathan'
     developerName = 'TEYOU TOURE NATHAN'
