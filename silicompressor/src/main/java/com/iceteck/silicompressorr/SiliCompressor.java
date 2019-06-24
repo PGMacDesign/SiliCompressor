@@ -255,7 +255,10 @@ public class SiliCompressor {
      * @param destinationDir destination directory where converted file should be saved
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFilePath, String destinationDir) {
+    public String compressVideo(@NonNull String videoFilePath, @NonNull String destinationDir) throws CompressionException {
+	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
+		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
         return compressVideo(videoFilePath, destinationDir, 0, 0, 0);
     }
     
@@ -270,7 +273,10 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(@Nullable VideoConversionProgressListener listener,
-                                String videoFilePath, String destinationDir) {
+                                @NonNull String videoFilePath, @NonNull String destinationDir) throws CompressionException {
+	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
+		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
         return compressVideo(listener, videoFilePath, destinationDir, 0, 0, 0);
     }
     
@@ -293,9 +299,11 @@ public class SiliCompressor {
      *                                    height and width ratio of the original video
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent)  {
-    	
+    public String compressVideo(@NonNull String videoFilePath, @NonNull String destinationDir,
+                                @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent)  throws CompressionException {
+	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
+		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent);
 	    if (isconverted) {
@@ -331,9 +339,11 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(@Nullable VideoConversionProgressListener listener,
-                                String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent)  {
-    	
+                                @NonNull String videoFilePath, @NonNull String destinationDir,
+                                @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent) throws CompressionException {
+	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
+		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent);
 	    if (isconverted) {
@@ -379,10 +389,12 @@ public class SiliCompressor {
      *                                    height and width ratio of the original video
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent,
-                                @FloatRange(from = 0.009, to = 0.999) float reduceHeightWidthToPercent) {
-    	
+    public String compressVideo(@NonNull String videoFilePath, @NonNull String destinationDir,
+                                @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent,
+                                @FloatRange(from = 0.001, to = 1.0) float reduceHeightWidthToPercent) throws CompressionException {
+	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
+		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);
 	    if (isconverted) {
@@ -429,10 +441,13 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(@Nullable VideoConversionProgressListener listener,
-                                String videoFilePath, String destinationDir,
-                                @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent,
-                                @FloatRange(from = 0.009, to = 0.999) float reduceHeightWidthToPercent) {
-    	
+                                @NonNull String videoFilePath, @NonNull String destinationDir,
+                                @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent,
+                                @FloatRange(from = 0.001, to = 1.0) float reduceHeightWidthToPercent) throws CompressionException {
+	
+	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
+		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);
 	    if (isconverted) {
@@ -460,12 +475,12 @@ public class SiliCompressor {
      * @param bitrate        the target bitrate of the compressed video or 0 to user default bitrate
      * @return The Path of the compressed video file
      */
-    public String compressVideo(String videoFilePath, String destinationDir,
-                                int outWidth, int outHeight, int bitrate) {
+    public String compressVideo(@NonNull String videoFilePath, @NonNull String destinationDir,
+                                int outWidth, int outHeight, int bitrate) throws CompressionException {
     	
-    	//String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
-	    
-	    
+    	if(videoFilePath.equalsIgnoreCase(destinationDir)){
+    		throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
         boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog).convertVideo(this.mContext, videoFilePath,
 		        new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted) {
@@ -495,11 +510,12 @@ public class SiliCompressor {
      * @return The Path of the compressed video file
      */
     public String compressVideo(@Nullable VideoConversionProgressListener listener,
-                                String videoFilePath, String destinationDir,
-                                int outWidth, int outHeight, int bitrate) {
-    	
-    	//String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
-	    
+                                @NonNull String videoFilePath, @NonNull String destinationDir,
+                                int outWidth, int outHeight, int bitrate) throws CompressionException {
+	
+	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
+		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+	    }
 	    
         boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
 		        new File(destinationDir), outWidth, outHeight, bitrate);

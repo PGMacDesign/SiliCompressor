@@ -67,7 +67,8 @@ public class Util {
         } else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
-        return null;
+        //If this triggers, likely caused by issue relating to not being in known folder
+        return uri.getPath();
     }
 
     public static boolean isExternalStorageDocument(Uri uri) {
@@ -81,4 +82,5 @@ public class Util {
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
+    
 }

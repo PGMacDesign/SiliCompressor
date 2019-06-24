@@ -23,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.iceteck.silicompressorr.CompressionException;
 import com.iceteck.silicompressorr.SiliCompressor;
 import com.iceteck.silicompressorr.Util;
 import com.iceteck.silicompressorr.VideoConversionProgressListener;
@@ -285,7 +286,7 @@ public class SelectPictureActivity extends AppCompatActivity {
 			        String newPath = filePath.replace(".mp4", "_90_PERCENT_EDITED.mp4");
 			        String newPath2 = filePath.replace(".mp4", "_50_PERCENT_EDITED.mp4");
 			        String newPath3 = filePath.replace(".mp4", "_10_PERCENT_EDITED.mp4");
-			        new VideoCompressAsyncTask(this).execute(videoUri.toString(), newPath, newPath2, newPath3);
+			        new VideoCompressAsyncTask(this).execute(filePath, newPath, newPath2, newPath3);
 		        } catch (Exception e){
 		        	e.printStackTrace();
 		        }
@@ -399,12 +400,17 @@ public class SelectPictureActivity extends AppCompatActivity {
 //                filePath = SiliCompressor.with(mContext).compressVideo(mContext, paths[0], paths[1]);
 	            
 	            //New Method
-                filePath = SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressListener() {
-	                @Override
-	                public void videoConversionProgressed(float progressPercentage) {
-						publishProgress(progressPercentage);
-	                }
-                }, paths[0], paths[1], 0.01F);
+	            Log.d("2", "SelectPictureActivity -- 401");
+	            try {
+		            filePath = SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressListener() {
+			            @Override
+			            public void videoConversionProgressed(float progressPercentage) {
+				            publishProgress(progressPercentage);
+			            }
+		            }, paths[0], paths[1], 0.01F);
+	            } catch (CompressionException ce){
+	            	ce.printStackTrace();
+	            }
 	            
             } catch (ArrayIndexOutOfBoundsException e) {
                 e.printStackTrace();

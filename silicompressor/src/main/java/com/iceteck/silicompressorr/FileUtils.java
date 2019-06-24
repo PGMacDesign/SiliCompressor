@@ -160,8 +160,29 @@ public class FileUtils {
         File file = new File(getPath(context, uri));
         return getMimeType(file);
     }
-
-
+	
+	/**
+	 * Check if the output path file is the same as the input one.
+	 * @param file
+	 * @param inputPath
+	 * @return
+	 */
+	public static boolean isSamePath(String inputPath, File file){
+    	if(file == null){
+    		return false;
+	    }
+    	if(inputPath == null){
+    		return false;
+	    }
+    	if(inputPath.isEmpty()){
+    		return false;
+	    }
+    	String outputPath = file.getPath();
+    	if(outputPath == null){
+    		return false;
+	    }
+    	return outputPath.equalsIgnoreCase(inputPath);
+	}
 
     /**
      * @param uri The Uri to check.

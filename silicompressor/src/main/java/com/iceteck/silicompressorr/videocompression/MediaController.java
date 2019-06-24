@@ -21,6 +21,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.iceteck.silicompressorr.CompressionException;
+import com.iceteck.silicompressorr.FileUtils;
 import com.iceteck.silicompressorr.SiliCompressor;
 import com.iceteck.silicompressorr.Util;
 import com.iceteck.silicompressorr.VideoConversionProgressListener;
@@ -39,6 +41,13 @@ import java.util.concurrent.TimeUnit;
 
 @SuppressLint("NewApi")
 public class MediaController {
+	
+	public static final String INVALID_URI =
+			"Invalid Uri passed. If the Uri appears to be valid, please check that the file is a valid video file.";
+	public static final String INPUT_URI_SAME_AS_OUTPUT_URI =
+			"The source file Uri you passed is identical to the destination Uri. Please check your " +
+					"destination Uri and remember that the source and destination Uri values " +
+					"cannot be the same.";
 	
 	public static File cachedFile;
 	public String path;
@@ -177,7 +186,7 @@ public class MediaController {
 			this.destDirectory = dest;
 		}
 		
-		public static void runConversion(final String videoPath, final File dest) {
+		public static void runConversion(final String videoPath, final File dest) throws CompressionException {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -197,7 +206,11 @@ public class MediaController {
 		
 		@Override
 		public void run() {
-			MediaController.getInstance().convertVideo(videoPath, destDirectory);
+			try {
+				MediaController.getInstance().convertVideo(videoPath, destDirectory);
+			} catch (CompressionException ce){
+				ce.printStackTrace();
+			}
 		}
 	}
 	
@@ -231,11 +244,14 @@ public class MediaController {
 	 * @param dest destination directory to put result
 	 */
 	
-	public void scheduleVideoConvert(String path, File dest) {
-		startVideoConvertFromQueue(path, dest);
+	public void scheduleVideoConvert(String path, File dest) throws CompressionException{
+		if(FileUtils.isSamePath(path, dest)){
+			throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
+		}
+		this.startVideoConvertFromQueue(path, dest);
 	}
 	
-	private void startVideoConvertFromQueue(String path, File dest) {
+	private void startVideoConvertFromQueue(String path, File dest) throws CompressionException{
 		VideoConvertRunnable.runConversion(path, dest);
 	}
 	
@@ -955,7 +971,7 @@ public class MediaController {
 	 * @param destDir    the destination directory where compressed video is eventually saved
 	 * @return
 	 */
-	public boolean convertVideo(final String sourcePath, File destDir) {
+	public boolean convertVideo(final String sourcePath, File destDir)  throws CompressionException {
 		return convertVideo(sourcePath, destDir, 0, 0, 0);
 	}
 	
@@ -970,7 +986,7 @@ public class MediaController {
 	 * @param destDir    the destination directory where compressed video is eventually saved
 	 * @return
 	 */
-	public boolean convertVideo(@Nullable Context context, final String sourcePath, File destDir) {
+	public boolean convertVideo(@Nullable Context context, final String sourcePath, File destDir)  throws CompressionException {
 		return convertVideo(context, sourcePath, destDir, 0, 0, 0);
 	}
 	
@@ -985,7 +1001,7 @@ public class MediaController {
 	 * @return
 	 */
 	@TargetApi(16)
-	public boolean convertVideo(final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate) {
+	public boolean convertVideo(final String sourcePath, File destDir, int outWidth, int outHeight, int outBitrate)  throws CompressionException {
 		return convertVideo(null, sourcePath, destDir, outWidth, outHeight, outBitrate);
 	}
 	
@@ -1004,10 +1020,15 @@ public class MediaController {
 	 */
 	@TargetApi(16)
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
-	                            File destDir, int outWidth, int outHeight, int outBitrate) {
+	                            File destDir, int outWidth, int outHeight, int outBitrate) throws CompressionException {
 		
-		MediaMetadataRetriever retriever = this.buildMediaMetadataRetriever(context, sourcePath);
 		
+		MediaMetadataRetriever retriever;
+		try {
+			retriever = this.buildMediaMetadataRetriever(context, sourcePath);
+		} catch (Throwable throwable){
+			throw new CompressionException(INVALID_URI);
+		}
 		String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
 		String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
 		String rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
@@ -1041,10 +1062,14 @@ public class MediaController {
 	 */
 	@TargetApi(16)
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
-	                            File destDir, @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent) {
+	                            File destDir, @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent)  throws CompressionException {
 		
-		
-		MediaMetadataRetriever retriever = this.buildMediaMetadataRetriever(context, sourcePath);
+		MediaMetadataRetriever retriever;
+		try {
+			retriever = this.buildMediaMetadataRetriever(context, sourcePath);
+		} catch (Throwable throwable){
+			throw new CompressionException(INVALID_URI);
+		}
 		
 		String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
 		String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
@@ -1106,11 +1131,15 @@ public class MediaController {
 	 */
 	@TargetApi(16)
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
-	                            File destDir, @FloatRange(from = 0.009, to = 0.999) float reduceVideoQualityToPercent,
-	                            @FloatRange(from = 0.009, to = 0.999) float reduceHeightWidthToPercent) {
+	                            File destDir, @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent,
+	                            @FloatRange(from = 0.001, to = 1.0) float reduceHeightWidthToPercent)  throws CompressionException {
 		
-		
-		MediaMetadataRetriever retriever = this.buildMediaMetadataRetriever(context, sourcePath);
+		MediaMetadataRetriever retriever;
+		try {
+			retriever = this.buildMediaMetadataRetriever(context, sourcePath);
+		} catch (Throwable throwable){
+			throw new CompressionException(INVALID_URI);
+		}
 		
 		String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
 		String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
@@ -1734,19 +1763,23 @@ public class MediaController {
 	private MediaMetadataRetriever buildMediaMetadataRetriever(@Nullable Context context, final String sourcePath) {
 		MediaMetadataRetriever retriever = new MediaMetadataRetriever();
 		this.path = sourcePath;
+		Log.d("1", "Within buildMediaMetadata, sourcePath @1737 - " + sourcePath);
 		boolean wasSuccessful = false;
 		try {
 			retriever.setDataSource(this.path);
 			wasSuccessful = true;
-		} catch (IllegalArgumentException ile) {
+			Log.d("1", "Within buildMediaMetadata, successfully set data @1741");
+		} catch (Throwable ile) {
 		}
 		if (!wasSuccessful) {
 			if (context != null) {
 				try {
 					this.path = Util.getFilePath(context, Uri.parse(sourcePath));
+					Log.d("1", "Attempting to set path (1749) as - " + this.path);
 					retriever.setDataSource(this.path);
 					wasSuccessful = true;
-				} catch (URISyntaxException | IllegalArgumentException ile) {
+					Log.d("1", "Within buildMediaMetadata, successfully set data @1752");
+				} catch (Throwable ile) {
 				}
 			}
 		}
@@ -1755,15 +1788,19 @@ public class MediaController {
 				try {
 					this.path = Util.getFilePath(context, Uri.parse(sourcePath));
 					this.path = "file://" + this.path;
+					Log.d("1", "Attempting to set path (1762) as - " + this.path);
 					retriever.setDataSource(this.path);
 					wasSuccessful = true;
-				} catch (URISyntaxException | IllegalArgumentException ile) {
+					Log.d("1", "Within buildMediaMetadata, successfully set data @1765");
+				} catch (Throwable ile) {
 				}
 			}
 		}
 		if (!wasSuccessful) {
 			this.path = "file://" + sourcePath;
+			Log.d("1", "Attempting to set path (1772) as - " + this.path);
 			retriever.setDataSource(this.path);
+			Log.d("1", "Within buildMediaMetadata, successfully set data @1774");
 			//Last one intentionally left out of try catch to trigger exception if bad Uri
 		}
 		
