@@ -104,6 +104,7 @@ I left the original methods intact that still utilize the previous / older appro
 
 7) Added in a boolean flag to allow the option to turn off / on logging so that the dev can ignore it if they don't want to see it (or flip it to false on production)  
 
+8) I changed the core MP4 parser from the original one to [My Custom Forked Version](https://github.com/PGMacDesign/mp4parser) so as to allow for less cluttered logging and more customization. 
 
 #### Misc
 
@@ -211,7 +212,7 @@ allprojects {
 Include this in your Module-level build.gradle file:
 
 ```groovy
-implementation 'com.github.pgmacdesign:silicompressor:3.0.1'
+implementation 'com.github.pgmacdesign:silicompressor:3.0.2'
 ```
 
 
