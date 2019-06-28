@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.pgmacdesign.silicompressor'
-version = '3.0.4'
+version = '3.0.5'
 
 android {
     compileSdkVersion 28
@@ -11,7 +11,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 28
         versionCode 7
-        versionName "3.0.4"
+        versionName "3.0.5"
     }
     buildTypes {
         release {
@@ -46,7 +46,7 @@ ext {
     siteUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor'
     gitUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor.git'
 
-    libraryVersion = '3.0.4'
+    libraryVersion = '3.0.5'
 
     developerId = 'tourenathan'
     developerName = 'TEYOU TOURE NATHAN'
