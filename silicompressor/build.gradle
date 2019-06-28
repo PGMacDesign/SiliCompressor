@@ -3,7 +3,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.pgmacdesign.silicompressor'
-version = '3.0.2'
+version = '3.0.4'
 
 android {
     compileSdkVersion 28
@@ -11,7 +11,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 28
         versionCode 7
-        versionName "3.0.3"
+        versionName "3.0.4"
     }
     buildTypes {
         release {
@@ -28,7 +28,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'junit:junit:4.12'
     implementation 'com.android.support:appcompat-v7:28.0.0'
-//	implementation 'com.github.PGMacDesign.mp4parser:isoparser:1.2.0'
+	implementation 'com.github.PGMacDesign.mp4parser:isoparser:1.2.10'
 }
 
 ext {
@@ -46,7 +46,7 @@ ext {
     siteUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor'
     gitUrl = 'https://github.com/Tourenathan-G5organisation/SiliCompressor.git'
 
-    libraryVersion = '3.0.0'
+    libraryVersion = '3.0.4'
 
     developerId = 'tourenathan'
     developerName = 'TEYOU TOURE NATHAN'
