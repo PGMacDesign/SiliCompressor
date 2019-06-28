@@ -152,7 +152,7 @@ public class FileUtils {
 
         return "application/octet-stream";
     }
-
+//
     /**
      * @return The MIME type for the give Uri.
      */
