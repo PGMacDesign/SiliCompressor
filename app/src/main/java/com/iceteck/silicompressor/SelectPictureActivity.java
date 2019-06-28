@@ -24,8 +24,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.iceteck.silicompressorr.CompressionException;
+import com.iceteck.silicompressorr.FileUtils;
 import com.iceteck.silicompressorr.SiliCompressor;
-import com.iceteck.silicompressorr.Util;
 import com.iceteck.silicompressorr.VideoConversionProgressListener;
 
 import java.io.File;
@@ -282,7 +282,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         	if(data != null){
 		        Uri videoUri = data.getData();
 		        try {
-			        String filePath = Util.getFilePath(SelectPictureActivity.this, videoUri);
+			        String filePath = FileUtils.getPath(SelectPictureActivity.this, videoUri);
 			        String newPath = filePath.replace(".mp4", "_90_PERCENT_EDITED.mp4");
 			        String newPath2 = filePath.replace(".mp4", "_50_PERCENT_EDITED.mp4");
 			        String newPath3 = filePath.replace(".mp4", "_10_PERCENT_EDITED.mp4");

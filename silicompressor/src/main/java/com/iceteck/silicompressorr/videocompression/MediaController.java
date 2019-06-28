@@ -24,7 +24,6 @@ import android.util.Log;
 import com.iceteck.silicompressorr.CompressionException;
 import com.iceteck.silicompressorr.FileUtils;
 import com.iceteck.silicompressorr.SiliCompressor;
-import com.iceteck.silicompressorr.Util;
 import com.iceteck.silicompressorr.VideoConversionProgressListener;
 
 import java.io.File;
@@ -1774,7 +1773,7 @@ public class MediaController {
 		if (!wasSuccessful) {
 			if (context != null) {
 				try {
-					this.path = Util.getFilePath(context, Uri.parse(sourcePath));
+					this.path = FileUtils.getPath(context, Uri.parse(sourcePath));
 					Log.d("1", "Attempting to set path (1749) as - " + this.path);
 					retriever.setDataSource(this.path);
 					wasSuccessful = true;
@@ -1786,7 +1785,7 @@ public class MediaController {
 		if (!wasSuccessful) {
 			if (context != null) {
 				try {
-					this.path = Util.getFilePath(context, Uri.parse(sourcePath));
+					this.path = FileUtils.getPath(context, Uri.parse(sourcePath));
 					this.path = "file://" + this.path;
 					Log.d("1", "Attempting to set path (1762) as - " + this.path);
 					retriever.setDataSource(this.path);

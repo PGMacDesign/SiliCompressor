@@ -212,7 +212,7 @@ allprojects {
 Include this in your Module-level build.gradle file:
 
 ```groovy
-implementation 'com.github.pgmacdesign:silicompressor:3.0.2'
+implementation 'com.github.pgmacdesign:silicompressor:3.0.3'
 ```
 
 
