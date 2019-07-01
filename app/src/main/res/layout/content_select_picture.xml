@@ -22,22 +22,47 @@
         android:orientation="vertical"
         android:id="@+id/picture_layout">
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="4dp"
             android:src="@drawable/ic_photo_camera_white_48px"
             android:id="@+id/photo"
             />
         <ImageView
             android:id="@+id/videoImageView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="4dp"
             android:src="@drawable/ic_videocam_grey_700_48dp"/>
 
         <ImageView
             android:id="@+id/videoImageView2"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_margin="4dp"
+            android:src="@mipmap/gallery"/>
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:src="@mipmap/ic_launcher"/>
+            android:gravity="center"
+            android:text="Percent Amount to compress the video to. (Defaults to 50%)"
+            android:textSize="14sp"
+            android:layout_margin="16dp"
+            />
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:inputType="numberDecimal"
+            android:gravity="center"
+            android:hint="Percent To Compress To (IE, 50.0)"
+            android:id="@+id/et"
+            />
     </LinearLayout>
 
 
@@ -62,11 +87,25 @@
         android:visibility="gone">
 
         <ProgressBar
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:id="@+id/progressBar"
             android:layout_gravity="center"
+            android:indeterminate="false"
             android:layout_weight="1"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/progress_tv"
+            android:layout_margin="4dp"
+            android:gravity="center"
+            android:textSize="15sp"/>
 
         <TextView
             android:layout_width="wrap_content"

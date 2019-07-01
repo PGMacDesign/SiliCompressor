@@ -118,6 +118,12 @@ This was also true when converting it down to 500kb (1% of total) so the total p
 
 If you are running an older device with less processing power, it may take longer whereas a newer device may convert faster. This is merely here as an example for reference. 
 
+#### Samples
+
+The [SelectPictureActivity](https://github.com/PGMacDesign/SiliCompressor/blob/master/app/src/main/java/com/iceteck/silicompressor/SelectPictureActivity.java) class has samples of how to both take and convert images + videos. 
+It also includes an edit text to determine the exact amount to compress a video by as well as a progress bar to demonstrate how to use the progress callback. 
+  
+
 Description
 --------
 #### Image 

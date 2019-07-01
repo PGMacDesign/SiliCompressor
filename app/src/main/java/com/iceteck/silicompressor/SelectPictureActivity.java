@@ -18,8 +18,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,6 +59,9 @@ public class SelectPictureActivity extends AppCompatActivity {
     private ImageView videoImageView;
     private ImageView videoImageView2;
     LinearLayout compressionMsg;
+    private EditText et;
+    private ProgressBar progressBar;
+    private TextView progress_tv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,12 +70,16 @@ public class SelectPictureActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        this.progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        this.progress_tv = (TextView) findViewById(R.id.progress_tv);
         imageView = (ImageView) findViewById(R.id.photo);
 	    videoImageView2 = (ImageView) findViewById(R.id.videoImageView2);
         videoImageView = (ImageView) findViewById(R.id.videoImageView);
+	    et = (EditText) findViewById(R.id.et);
         picDescription = (TextView) findViewById(R.id.pic_description);
         compressionMsg = (LinearLayout) findViewById(R.id.compressionMsg);
 
+        this.et.setText("50.00");
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -250,7 +259,19 @@ public class SelectPictureActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+	
+	    String str = et.getText().toString();
+	    Float amountToSet = 0.5F;
+	    try {
+			amountToSet = Float.parseFloat(str);
+			while (amountToSet > 1){
+				amountToSet = amountToSet / 100;
+			}
+	    } catch (Exception e){}
+	    if(amountToSet == null){
+	    	amountToSet = 0.5F;
+	    }
+	    
         //verify if the image was gotten successfully
         if (requestCode == REQUEST_TAKE_CAMERA_PHOTO && resultCode == Activity.RESULT_OK) {
 
@@ -275,18 +296,18 @@ public class SelectPictureActivity extends AppCompatActivity {
 			        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/Silicompressor/videos");
 			        if (f.mkdirs() || f.isDirectory())
 				        //compress and output new video specs
-				        new VideoCompressAsyncTask(this).execute(mCurrentPhotoPath, f.getPath());
+				        new VideoCompressAsyncTask(this, amountToSet).execute(mCurrentPhotoPath, f.getPath());
 		        }
 	        }
         } else if (requestCode == REQUEST_GALLERY_VIDEO_RETRIEVE && resultCode == RESULT_OK){
         	if(data != null){
 		        Uri videoUri = data.getData();
+		        
 		        try {
 			        String filePath = FileUtils.getPath(SelectPictureActivity.this, videoUri);
-			        String newPath = filePath.replace(".mp4", "_90_PERCENT_EDITED.mp4");
-			        String newPath2 = filePath.replace(".mp4", "_50_PERCENT_EDITED.mp4");
-			        String newPath3 = filePath.replace(".mp4", "_10_PERCENT_EDITED.mp4");
-			        new VideoCompressAsyncTask(this).execute(filePath, newPath, newPath2, newPath3);
+			        String newPath = filePath.replace(".mp4", "_Compressed.mp4");
+	
+			        new VideoCompressAsyncTask(this, amountToSet).execute(filePath, newPath);
 		        } catch (Exception e){
 		        	e.printStackTrace();
 		        }
@@ -365,11 +386,19 @@ public class SelectPictureActivity extends AppCompatActivity {
     class VideoCompressAsyncTask extends AsyncTask<String, Float, String> {
 
         Context mContext;
+	    Float amountToCompressToLocal;
 
         public VideoCompressAsyncTask(Context context) {
             mContext = context;
+            this.amountToCompressToLocal = null;
         }
+	
+	    public VideoCompressAsyncTask(Context context, float percentToCompressDownToLocal) {
+		    mContext = context;
+		    this.amountToCompressToLocal = percentToCompressDownToLocal;
+	    }
 
+	    
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -387,7 +416,18 @@ public class SelectPictureActivity extends AppCompatActivity {
         		return;
 	        }
         	if(true) { //Flip to false to stop printing here
-		        Log.d("SelectPictureActivity", "Progress Complete: " + ((values[0]) * 100) + "%");
+		        try {
+		        	if(values != null) {
+		        		if(values[0] != null) {
+		        			float flt = ((values[0]) * 100);
+					        Log.d("SelectPictureActivity", "Progress Complete: " + (flt) + "%");
+					        progressBar.setProgress((int) flt);
+					        progress_tv.setText("Progress: " + ((int) flt) + "%");
+				        }
+			        }
+		        } catch (Exception e){
+		        	e.printStackTrace();
+		        }
 	        }
 		    super.onProgressUpdate(values);
 	    }
@@ -395,19 +435,25 @@ public class SelectPictureActivity extends AppCompatActivity {
 	    @Override
         protected String doInBackground(String... paths) {
             String filePath = null;
+            Log.d("d", "Do in background, amount to compress local == " + amountToCompressToLocal);
+            if(amountToCompressToLocal == null){
+            	amountToCompressToLocal = 0.5F;
+            }
+            if(amountToCompressToLocal < 0.0 || amountToCompressToLocal > 1.0){
+            	amountToCompressToLocal = 0.5F;
+            }
             try {
             	//Old Method
 //                filePath = SiliCompressor.with(mContext).compressVideo(mContext, paths[0], paths[1]);
 	            
 	            //New Method
-	            Log.d("2", "SelectPictureActivity -- 401");
 	            try {
 		            filePath = SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressListener() {
 			            @Override
 			            public void videoConversionProgressed(float progressPercentage) {
 				            publishProgress(progressPercentage);
 			            }
-		            }, paths[0], paths[1], 0.01F);
+		            }, paths[0], paths[1], this.amountToCompressToLocal);
 	            } catch (CompressionException ce){
 	            	ce.printStackTrace();
 	            }
