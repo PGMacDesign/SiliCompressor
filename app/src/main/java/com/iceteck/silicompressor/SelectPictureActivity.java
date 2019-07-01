@@ -416,6 +416,7 @@ public class SelectPictureActivity extends AppCompatActivity {
         		return;
 	        }
         	if(true) { //Flip to false to stop printing here
+		        progressBar.setIndeterminate(false);
 		        try {
 		        	if(values != null) {
 		        		if(values[0] != null) {
@@ -428,6 +429,8 @@ public class SelectPictureActivity extends AppCompatActivity {
 		        } catch (Exception e){
 		        	e.printStackTrace();
 		        }
+	        } else {
+		        progressBar.setIndeterminate(true);
 	        }
 		    super.onProgressUpdate(values);
 	    }
