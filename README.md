@@ -106,7 +106,11 @@ I left the original methods intact that still utilize the previous / older appro
 
 8) I changed the core MP4 parser from the original one to [My Custom Forked Version](https://github.com/PGMacDesign/mp4parser) so as to allow for less cluttered logging and more customization. 
 
-9) Added in the ability to cancel the Compression if it is taking too long. The code sample on how to do this is below.
+9) Added in the ability to cancel the Compression if it is taking too long. Here is the sample code of how to accomplish this:
+
+```java
+SiliCompressor.with(Context).cancelVideoCompression();
+```
 
 10) Added additional functionality to the [VideoConversionProgressListener](https://github.com/PGMacDesign/SiliCompressor/blob/master/silicompressor/src/main/java/com/iceteck/silicompressorr/VideoConversionProgressListener.java) to trigger a callback with the estimated time left on the current conversion operation. Note that the value may be null!  
 
@@ -179,11 +183,6 @@ SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressLis
 String filePath = SiliCompressor.with(Context).compressVideo(videoPath, destinationDirectory);
 ```
 
-#### Cancel a Video Compression Job currently running
-```java
-SiliCompressor.with(Context).cancelVideoCompression();
-```
- 
 #### Compress an image and return the file path of the new image
 ```java
 String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory);
@@ -229,7 +228,7 @@ allprojects {
 Include this in your Module-level build.gradle file:
 
 ```groovy
-implementation 'com.github.pgmacdesign:silicompressor:3.0.3'
+implementation 'com.github.pgmacdesign:silicompressor:3.0.6'
 ```
 
 
