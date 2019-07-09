@@ -60,7 +60,7 @@ public class MediaController {
 	private final static int PROCESSOR_TYPE_SEC = 4;
 	private final static int PROCESSOR_TYPE_TI = 5;
 	private static volatile MediaController Instance = null;
-	private boolean videoConvertFirstWrite = true;
+	private boolean videoConvertFirstWrite = true, manualCancelTriggered = false;
 	
 	//Default values
 	private final static int DEFAULT_VIDEO_WIDTH = 640;
@@ -384,6 +384,7 @@ public class MediaController {
 	 */
 	private boolean processConversionOld(@NonNull File destDir, int outWidth, int outHeight,
 	                                     int outBitrate, int rotationValue, int originalWidth, int originalHeight) {
+		long systemStartTime = System.nanoTime();
 		long startTime = -1;
 		long endTime = -1;
 		
@@ -629,8 +630,13 @@ public class MediaController {
 											if(pass % 10 == 0) {
 												//Doing this every 10th pass so as to reduce the amount of clutter in callbacks
 												this.listener.videoConversionProgressed(
-														(float) ((float) totalChunkSize / (float) totalFileSizeInBytes));
+														(float) ((float) totalChunkSize / (float) totalFileSizeInBytes),
+														MediaController.calculateEstimatedMillisecondsLeft(
+																systemStartTime, totalChunkSize, totalFileSizeInBytes));
 											}
+										}
+										if(MediaController.this.manualCancelTriggered){
+											throw new CompressionException(SiliCompressor.FILE_CONVERSION_CANCELED);
 										}
 										if (chunkSize < 0) {
 											decoder.queueInputBuffer(inputBufIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
@@ -1020,8 +1026,7 @@ public class MediaController {
 	@TargetApi(16)
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
 	                            File destDir, int outWidth, int outHeight, int outBitrate) throws CompressionException {
-		
-		
+		this.manualCancelTriggered = false;
 		MediaMetadataRetriever retriever;
 		try {
 			retriever = this.buildMediaMetadataRetriever(context, sourcePath);
@@ -1035,6 +1040,8 @@ public class MediaController {
 		int rotationValue = Integer.valueOf(rotation);
 		int originalWidth = Integer.valueOf(width);
 		int originalHeight = Integer.valueOf(height);
+		
+		retriever.release();
 		
 		return this.processConversion(destDir, outWidth, outHeight, outBitrate,
 				rotationValue, originalWidth, originalHeight);
@@ -1062,7 +1069,7 @@ public class MediaController {
 	@TargetApi(16)
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
 	                            File destDir, @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent)  throws CompressionException {
-		
+		this.manualCancelTriggered = false;
 		MediaMetadataRetriever retriever;
 		try {
 			retriever = this.buildMediaMetadataRetriever(context, sourcePath);
@@ -1075,23 +1082,14 @@ public class MediaController {
 		String rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
 		String existingBitrate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE);
 		
-		if(MediaController.shouldDebugLog) {
-//			//LatLng, formatted like this - "+33.9213-118.0067/"
-//			Log.d("MediaController", "Within MediaController, Video locationOfVideo == " + locationOfVideo);
-//			//Duration in Milliseconds
-//			Log.d("MediaController", "Within MediaController, Video duration == " + duration);
-//			//Mimetype formatted like this: "video/mp4"
-//			Log.d("MediaController", "Within MediaController, Video mimetype == " + mimetype);
-//			//Simple value if "yes" If there is audio, otherwise, this is null
-//			Log.d("MediaController", "Within MediaController, Video hasAudio == " + hasAudio);
-		}
-		
 		int rotationValue = Integer.valueOf(rotation);
 		int originalWidth = Integer.valueOf(width);
 		int originalHeight = Integer.valueOf(height);
 		int existingBitrateValue = Integer.valueOf(existingBitrate);
 		
 		float newBitrate = (float) existingBitrateValue * reduceVideoQualityToPercent;
+		
+		retriever.release();
 		
 		return this.processConversion(destDir, originalWidth, originalHeight, (int) newBitrate,
 				rotationValue, originalWidth, originalHeight);
@@ -1132,7 +1130,7 @@ public class MediaController {
 	public boolean convertVideo(@Nullable Context context, final String sourcePath,
 	                            File destDir, @FloatRange(from = 0.001, to = 1.0) float reduceVideoQualityToPercent,
 	                            @FloatRange(from = 0.001, to = 1.0) float reduceHeightWidthToPercent)  throws CompressionException {
-		
+		this.manualCancelTriggered = false;
 		MediaMetadataRetriever retriever;
 		try {
 			retriever = this.buildMediaMetadataRetriever(context, sourcePath);
@@ -1164,6 +1162,8 @@ public class MediaController {
 		
 		float newBitrate = (float) existingBitrateValue * reduceVideoQualityToPercent;
 		
+		retriever.release();
+		
 		return this.processConversion(destDir, originalWidth, originalHeight, (int) newBitrate,
 				rotationValue, originalWidth, originalHeight);
 		
@@ -1184,7 +1184,8 @@ public class MediaController {
 	 * @return
 	 */
 	private boolean processConversion(@NonNull File destDir, int outWidth, int outHeight,
-	                                  int outBitrate, int rotationValue, int originalWidth, int originalHeight) {
+	                                  int outBitrate, int rotationValue, int originalWidth, int originalHeight) throws CompressionException {
+		long systemStartTime = System.nanoTime();
 		long startTime = -1;
 		long endTime = -1;
 		
@@ -1201,14 +1202,8 @@ public class MediaController {
 		
 		int bitrate = outBitrate > 0 ? outBitrate : DEFAULT_VIDEO_BITRATE;
 		int rotateRender = 0;
-
-//        File cacheFile = new File(destDir,
-//                "VIDEO_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".mp4"
-//        );
+		
 		File cacheFile = new File(destDir.getAbsolutePath());
-//        try {
-//        	cacheFile.mkdir();
-//        } catch (Exception e){}
 		
 		if (Build.VERSION.SDK_INT < 18 && resultHeight > resultWidth && resultWidth != originalWidth && resultHeight != originalHeight) {
 			int temp = resultHeight;
@@ -1431,8 +1426,13 @@ public class MediaController {
 											if(pass % 10 == 0) {
 												//Doing this every 10th pass so as to reduce the amount of clutter in callbacks
 												this.listener.videoConversionProgressed(
-														(float) ((float) totalChunkSize / (float) totalFileSizeInBytes));
+														(float) ((float) totalChunkSize / (float) totalFileSizeInBytes),
+														MediaController.calculateEstimatedMillisecondsLeft(
+																systemStartTime, totalChunkSize, totalFileSizeInBytes));
 											}
+										}
+										if(MediaController.this.manualCancelTriggered){
+											throw new CompressionException(SiliCompressor.FILE_CONVERSION_CANCELED);
 										}
 										if (chunkSize < 0) {
 											decoder.queueInputBuffer(inputBufIndex, 0, 0, 0L, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
@@ -1683,7 +1683,7 @@ public class MediaController {
 
 				if(this.listener != null){
 					//To indicate 100% complete
-					this.listener.videoConversionProgressed((float) (1));
+					this.listener.videoConversionProgressed((float) (1), 0L);
 				}
 			}
 		} else {
@@ -1762,22 +1762,18 @@ public class MediaController {
 	private MediaMetadataRetriever buildMediaMetadataRetriever(@Nullable Context context, final String sourcePath) {
 		MediaMetadataRetriever retriever = new MediaMetadataRetriever();
 		this.path = sourcePath;
-		Log.d("1", "Within buildMediaMetadata, sourcePath @1737 - " + sourcePath);
 		boolean wasSuccessful = false;
 		try {
 			retriever.setDataSource(this.path);
 			wasSuccessful = true;
-			Log.d("1", "Within buildMediaMetadata, successfully set data @1741");
 		} catch (Throwable ile) {
 		}
 		if (!wasSuccessful) {
 			if (context != null) {
 				try {
 					this.path = FileUtils.getPath(context, Uri.parse(sourcePath));
-					Log.d("1", "Attempting to set path (1749) as - " + this.path);
 					retriever.setDataSource(this.path);
 					wasSuccessful = true;
-					Log.d("1", "Within buildMediaMetadata, successfully set data @1752");
 				} catch (Throwable ile) {
 				}
 			}
@@ -1787,19 +1783,15 @@ public class MediaController {
 				try {
 					this.path = FileUtils.getPath(context, Uri.parse(sourcePath));
 					this.path = "file://" + this.path;
-					Log.d("1", "Attempting to set path (1762) as - " + this.path);
 					retriever.setDataSource(this.path);
 					wasSuccessful = true;
-					Log.d("1", "Within buildMediaMetadata, successfully set data @1765");
 				} catch (Throwable ile) {
 				}
 			}
 		}
 		if (!wasSuccessful) {
 			this.path = "file://" + sourcePath;
-			Log.d("1", "Attempting to set path (1772) as - " + this.path);
 			retriever.setDataSource(this.path);
-			Log.d("1", "Within buildMediaMetadata, successfully set data @1774");
 			//Last one intentionally left out of try catch to trigger exception if bad Uri
 		}
 		
@@ -1808,6 +1800,40 @@ public class MediaController {
 	
 	//endregion
 
+	//region Total Time Remaining Calculation Methods
+	
+	/**
+	 * Calculate the estimated number of nanoseconds left
+	 * @param startTimeInNanoseconds
+	 * @param currentConvertedAmount
+	 * @param totalFileSize
+	 * @return
+	 */
+	private static Long calculateEstimatedMillisecondsLeft(long startTimeInNanoseconds,
+	                                                       long currentConvertedAmount,
+	                                                       long totalFileSize){
+		long now = System.nanoTime();
+		if(startTimeInNanoseconds > now){
+			return null;
+		}
+		long elapsedTime = now - startTimeInNanoseconds;
+		long totalDownloadTime = (elapsedTime * totalFileSize / currentConvertedAmount);
+		long remainingTime = totalDownloadTime - elapsedTime;
+		if(remainingTime <= 0){
+			return null;
+		}
+		return TimeUnit.NANOSECONDS.toMillis(remainingTime);
+	}
+	
+	//endregion
+	
+	//region Misc Public Methods
+	
+	public void cancelVideoCompression(){
+		this.manualCancelTriggered = true;
+	}
+	
+	//endregion
 	
 	/**
 	 * Copy a file

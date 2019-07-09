@@ -92,7 +92,7 @@ These are the new methods; each with an overloaded option to pass in the listene
     
 ```
 
-3) Added in a callback listener [VideoConversionProgressListener](linktbd) that can be passed into the video conversion process that will pass back progress update value (in floats ranging from 0 - 1) to indicate the progress of the video conversion. 
+3) Added in a callback listener [VideoConversionProgressListener](https://github.com/PGMacDesign/SiliCompressor/blob/master/silicompressor/src/main/java/com/iceteck/silicompressorr/VideoConversionProgressListener.java) that can be passed into the video conversion process that will pass back progress update value (in floats ranging from 0 - 1) to indicate the progress of the video conversion. 
 
 4) Removed the forced name change that utilized the previous coder's `"VIDEO_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".mp4"` String. It will now use whatever you send as the output directory + file.
 I left the original methods intact that still utilize the previous / older approach, but my newer methods do not. 
@@ -106,6 +106,10 @@ I left the original methods intact that still utilize the previous / older appro
 
 8) I changed the core MP4 parser from the original one to [My Custom Forked Version](https://github.com/PGMacDesign/mp4parser) so as to allow for less cluttered logging and more customization. 
 
+9) Added in the ability to cancel the Compression if it is taking too long. The code sample on how to do this is below.
+
+10) Added additional functionality to the [VideoConversionProgressListener](https://github.com/PGMacDesign/SiliCompressor/blob/master/silicompressor/src/main/java/com/iceteck/silicompressorr/VideoConversionProgressListener.java) to trigger a callback with the estimated time left on the current conversion operation. Note that the value may be null!  
+
 #### Misc
 
 I timed a few of the conversions using a Galaxy S9 for reference. 
@@ -115,6 +119,8 @@ This was also true when converting it down to 70mb (2% of total, but passing in 
 
 2) Compressing a 5.00mb mp4 down to 2.50mb (50%) took 2456 milliseconds (2.5 seconds). 
 This was also true when converting it down to 500kb (1% of total) so the total percent to compress to does not adjust the time taken for the compression to occur.  
+
+It definitely takes longer to compress a longer video (duration) than a shorter video.
 
 If you are running an older device with less processing power, it may take longer whereas a newer device may convert faster. This is merely here as an example for reference. 
 
@@ -173,6 +179,11 @@ SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressLis
 String filePath = SiliCompressor.with(Context).compressVideo(videoPath, destinationDirectory);
 ```
 
+#### Cancel a Video Compression Job currently running
+```java
+SiliCompressor.with(Context).cancelVideoCompression();
+```
+ 
 #### Compress an image and return the file path of the new image
 ```java
 String filePath = SiliCompressor.with(Context).compress(imagePath, destinationDirectory);

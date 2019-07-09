@@ -36,6 +36,7 @@ import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class SelectPictureActivity extends AppCompatActivity {
 
@@ -381,7 +382,6 @@ public class SelectPictureActivity extends AppCompatActivity {
 
         }
     }
-
 	
     class VideoCompressAsyncTask extends AsyncTask<String, Float, String> {
 
@@ -424,6 +424,13 @@ public class SelectPictureActivity extends AppCompatActivity {
 					        Log.d("SelectPictureActivity", "Progress Complete: " + (flt) + "%");
 					        progressBar.setProgress((int) flt);
 					        progress_tv.setText("Progress: " + ((int) flt) + "%");
+					        
+					        if(flt > 40){
+					        	if(false) { //Flip this to true to foce manual cancel when progress hits 40%
+							        Log.d("1", "Attempting manual cancel of progress conversion @ >= 40%");
+							        SiliCompressor.with(this.mContext).cancelVideoCompression();
+						        }
+					        }
 				        }
 			        }
 		        } catch (Exception e){
@@ -453,8 +460,9 @@ public class SelectPictureActivity extends AppCompatActivity {
 	            try {
 		            filePath = SiliCompressor.with(mContext, true).compressVideo(new VideoConversionProgressListener() {
 			            @Override
-			            public void videoConversionProgressed(float progressPercentage) {
+			            public void videoConversionProgressed(float progressPercentage, Long estimatedNumberOfMillisecondsLeft) {
 				            publishProgress(progressPercentage);
+				            triggerEstimatedMillisecondsLeft(estimatedNumberOfMillisecondsLeft);
 			            }
 		            }, paths[0], paths[1], this.amountToCompressToLocal);
 	            } catch (CompressionException ce){
@@ -487,5 +495,11 @@ public class SelectPictureActivity extends AppCompatActivity {
         }
     }
 
+    private void triggerEstimatedMillisecondsLeft(Long est){
+		if(est == null){
+			return;
+		}
+		Log.d("1", "Estimated Number of MilliSeconds left: " + est);
+    }
 
 }

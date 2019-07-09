@@ -34,14 +34,19 @@ import java.util.Locale;
  * Created by Toure on 28/03/2016.
  */
 public class SiliCompressor {
-
-    private static final String LOG_TAG = SiliCompressor.class.getSimpleName();
-    public static String videoCompressionPath;
+	
+	public static final String FILE_CONVERSION_FAILED = "File Conversion failed";
+	public static final String FILE_CONVERSION_CANCELED = "File Conversion manually canceled";
+	
+	public static String videoCompressionPath;
+	
+	private static final String LOG_TAG = SiliCompressor.class.getSimpleName();
 
     static boolean shouldDebugLog;
     
     static volatile SiliCompressor singleton = null;
     private Context mContext;
+    //Older file provider using legacy methods
     private static final String FILE_PROVIDER_AUTHORITY = ".iceteck.silicompressor.provider";
 
     public SiliCompressor(Context context) {
@@ -89,6 +94,10 @@ public class SiliCompressor {
     }
     
     //endregion
+	
+	public void cancelVideoCompression(){
+		MediaController.getInstance(SiliCompressor.shouldDebugLog).cancelVideoCompression();
+	}
 	
     /**
      * Compress the image at with the specified path and return the filepath of the compressed image.
@@ -229,16 +238,19 @@ public class SiliCompressor {
 				new File(destinationDir), outWidth, outHeight, bitrate);
 		if (isconverted) {
 			if(SiliCompressor.shouldDebugLog) {
-				Log.v(LOG_TAG, "Video Conversion Complete");
+				Log.d(LOG_TAG, "Video Conversion Complete");
 			}
 		} else {
 			if(SiliCompressor.shouldDebugLog) {
-				Log.v(LOG_TAG, "Video conversion in progress");
+				Log.d(LOG_TAG, "Video conversion in progress");
 			}
 		}
 		
-		return MediaController.cachedFile.getPath();
-		
+		try {
+			return MediaController.cachedFile.getPath();
+		} catch (NullPointerException e){
+			return null;
+		}
 	}
 	
 	//endregion
@@ -308,15 +320,19 @@ public class SiliCompressor {
 			    new File(destinationDir), reduceVideoQualityToPercent);
 	    if (isconverted) {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video Conversion Complete");
+			    Log.d(LOG_TAG, "Video Conversion Complete");
 		    }
 	    } else {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video conversion in progress");
+			    Log.d(LOG_TAG, "Video conversion in progress");
 		    }
 	    }
 	
-	    return MediaController.cachedFile.getPath();
+	    try {
+		    return MediaController.cachedFile.getPath();
+	    } catch (NullPointerException e){
+		    throw new CompressionException(FILE_CONVERSION_FAILED);
+	    }
     }
     
     /**
@@ -344,19 +360,25 @@ public class SiliCompressor {
 	    if(videoFilePath.equalsIgnoreCase(destinationDir)){
 		    throw new CompressionException(MediaController.INPUT_URI_SAME_AS_OUTPUT_URI);
 	    }
+	    Log.d("1", "Compress Video @363");
 	    boolean isconverted = MediaController.getInstance(SiliCompressor.shouldDebugLog, listener).convertVideo(this.mContext, videoFilePath,
 			    new File(destinationDir), reduceVideoQualityToPercent);
+	    Log.d("1", "Compress Video @366");
 	    if (isconverted) {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video Conversion Complete");
+			    Log.d(LOG_TAG, "Video Conversion Complete");
 		    }
 	    } else {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video conversion in progress");
+			    Log.d(LOG_TAG, "Video conversion in progress");
 		    }
 	    }
-	
-	    return MediaController.cachedFile.getPath();
+	    
+		try {
+			return MediaController.cachedFile.getPath();
+		} catch (NullPointerException e){
+			throw new CompressionException(FILE_CONVERSION_FAILED);
+		}
     }
     
     /**
@@ -399,15 +421,19 @@ public class SiliCompressor {
 			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);
 	    if (isconverted) {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video Conversion Complete");
+			    Log.d(LOG_TAG, "Video Conversion Complete");
 		    }
 	    } else {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video conversion in progress");
+			    Log.d(LOG_TAG, "Video conversion in progress");
 		    }
 	    }
 	
-	    return MediaController.cachedFile.getPath();
+	    try {
+		    return MediaController.cachedFile.getPath();
+	    } catch (NullPointerException e){
+		    throw new CompressionException(FILE_CONVERSION_FAILED);
+	    }
     }
     
     /**
@@ -452,15 +478,19 @@ public class SiliCompressor {
 			    new File(destinationDir), reduceVideoQualityToPercent, reduceHeightWidthToPercent);
 	    if (isconverted) {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video Conversion Complete");
+			    Log.d(LOG_TAG, "Video Conversion Complete");
 		    }
 	    } else {
 		    if(SiliCompressor.shouldDebugLog) {
-			    Log.v(LOG_TAG, "Video conversion in progress");
+			    Log.d(LOG_TAG, "Video conversion in progress");
 		    }
 	    }
 	
-	    return MediaController.cachedFile.getPath();
+	    try {
+		    return MediaController.cachedFile.getPath();
+	    } catch (NullPointerException e){
+		    throw new CompressionException(FILE_CONVERSION_FAILED);
+	    }
     }
     
     /**
@@ -485,16 +515,19 @@ public class SiliCompressor {
 		        new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted) {
 	        if(SiliCompressor.shouldDebugLog) {
-		        Log.v(LOG_TAG, "Video Conversion Complete");
+		        Log.d(LOG_TAG, "Video Conversion Complete");
 	        }
         } else {
 	        if(SiliCompressor.shouldDebugLog) {
-		        Log.v(LOG_TAG, "Video conversion in progress");
+		        Log.d(LOG_TAG, "Video conversion in progress");
 	        }
         }
-
-        return MediaController.cachedFile.getPath();
-
+	
+	    try {
+		    return MediaController.cachedFile.getPath();
+	    } catch (NullPointerException e){
+		    throw new CompressionException(FILE_CONVERSION_FAILED);
+	    }
     }
     
     /**
@@ -521,16 +554,19 @@ public class SiliCompressor {
 		        new File(destinationDir), outWidth, outHeight, bitrate);
         if (isconverted) {
 	        if(SiliCompressor.shouldDebugLog) {
-		        Log.v(LOG_TAG, "Video Conversion Complete");
+		        Log.d(LOG_TAG, "Video Conversion Complete");
 	        }
         } else {
 	        if(SiliCompressor.shouldDebugLog) {
-		        Log.v(LOG_TAG, "Video conversion in progress");
+		        Log.d(LOG_TAG, "Video conversion in progress");
 	        }
         }
-
-        return MediaController.cachedFile.getPath();
-
+	
+	    try {
+		    return MediaController.cachedFile.getPath();
+	    } catch (NullPointerException e){
+		    throw new CompressionException(FILE_CONVERSION_FAILED);
+	    }
     }
     
     //endregion
